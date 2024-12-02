@@ -6,12 +6,12 @@ Dictionary<int, IDay> days = new()
     { 1, new Day1() }
 };
 
-Console.WriteLine("Day: ");
+Console.Write("Day: ");
 var day = int.Parse(Console.ReadLine());
-Console.WriteLine("Part: ");
+Console.Write("Part: ");
 var part = int.Parse(Console.ReadLine());
 
-var input = await ReadInput(day, part);
+var input = await ReadInput(day);
 
 var dayToExecute = days[day];
 if (part == 1)
@@ -23,10 +23,11 @@ else
     await dayToExecute.ExecutePart2(input);
 }
 
-static async Task<List<string>> ReadInput(int day, int part)
+static async Task<List<string>> ReadInput(
+    int day)
 {
     var content = new List<string>();
-    var filePath = $"Days/Input/Day{day}-Part{part}.txt";
+    var filePath = $"Days/Input/Day{day}.txt";
 
     try
     {
