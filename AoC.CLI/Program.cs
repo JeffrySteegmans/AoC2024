@@ -8,20 +8,16 @@ Dictionary<int, IDay> days = new()
 
 Console.Write("Day: ");
 var day = int.Parse(Console.ReadLine());
-Console.Write("Part: ");
-var part = int.Parse(Console.ReadLine());
 
 var input = await ReadInput(day);
 
 var dayToExecute = days[day];
-if (part == 1)
-{
-    await dayToExecute.ExecutePart1(input);
-}
-else
-{
-    await dayToExecute.ExecutePart2(input);
-}
+
+var answerPart1 = await dayToExecute.ExecutePart1(input);
+var answerPart2 = await dayToExecute.ExecutePart2(input);
+
+Console.WriteLine($"Part 1: {answerPart1}");
+Console.WriteLine($"Part 2: {answerPart2}");
 
 static async Task<List<string>> ReadInput(
     int day)

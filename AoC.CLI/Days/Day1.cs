@@ -3,7 +3,37 @@
 internal class Day1
     : IDay
 {
-    public Task ExecutePart1(
+    public Task<string> ExecutePart1(
+        IEnumerable<string> input)
+    {
+        var (leftList, rightList) = ParseLists(input);
+
+        leftList = [.. leftList.Order()];
+        rightList = [.. rightList.Order()];
+
+        var answer = leftList
+            .Select((x, i) =>
+            {
+                return Math.Abs(x - rightList[i]);
+            })
+            .Sum();
+
+        return Task.FromResult(answer.ToString());
+    }
+
+    public Task<string> ExecutePart2(
+        IEnumerable<string> input)
+    {
+        var (leftList, rightList) = ParseLists(input);
+
+        var answer = leftList
+            .Select(x => x * rightList.Count(y => y == x))
+            .Sum();
+
+        return Task.FromResult(answer.ToString());
+    }
+
+    private static (List<int>, List<int>) ParseLists(
         IEnumerable<string> input)
     {
         List<int> leftList = [];
@@ -17,26 +47,9 @@ internal class Day1
             rightList.Add(int.Parse(numbers.Last().ToString()));
         }
 
-        var orderedLeftList = leftList.Order().ToList();
-        var orderedRightList = rightList.Order().ToList();
-
-        var answer = orderedLeftList
-            .Select((x, i) =>
-            {
-                return (int)Math.Abs(x - orderedRightList[i]);
-            })
-            .Sum();
-
-        Console.WriteLine($"answer: {answer}");
-
-        return Task.CompletedTask;
-    }
-
-    public Task ExecutePart2(
-        IEnumerable<string> input)
-    {
-        Console.WriteLine("Day 1, Part 2");
-
-        return Task.CompletedTask;
+        return (
+            leftList,
+            rightList
+        );
     }
 }
