@@ -3,7 +3,8 @@ using AoC.CLI.Days;
 
 Dictionary<int, IDay> days = new()
 {
-    { 1, new Day1() }
+    { 1, new Day1() },
+    { 2, new Day2() }
 };
 
 Console.Write("Day: ");
