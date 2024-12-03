@@ -6,14 +6,15 @@ namespace AoC.CLI.Days;
 internal static partial class CustomRegex
 {
     [GeneratedRegex(@"mul\([0-9]{1,3},[0-9]{1,3}\)")]
-    public static partial Regex MulRegex();
+    public static partial Regex Part1Regex();
+
+    [GeneratedRegex(@"mul\([0-9]{1,3},[0-9]{1,3}\)|don't\(\)|do\(\)")]
+    public static partial Regex Part2Regex();
 }
 
 internal class Day3
     : IDay
 {
-    private const string pattern = @"mul\([0-9]{1,3},[0-9]{1,3}\)";
-
     public Task<string> ExecutePart1(
         IEnumerable<string> input)
     {
@@ -24,7 +25,7 @@ internal class Day3
             builder.Append(line);
         }
 
-        MatchCollection matches = CustomRegex.MulRegex()
+        MatchCollection matches = CustomRegex.Part1Regex()
             .Matches(builder.ToString());
 
         var answer = matches
@@ -40,10 +41,41 @@ internal class Day3
     public Task<string> ExecutePart2(
         IEnumerable<string> input)
     {
-        var regex = new Regex(pattern);
+        var builder = new StringBuilder();
 
-        Match m = regex.Match(input.First());
+        foreach(var line in input)
+        {
+            builder.Append(line);
+        }
 
-        return Task.FromResult(m.Groups.Count.ToString());
+        MatchCollection matches = CustomRegex.Part2Regex()
+            .Matches(builder.ToString());
+
+        var doCalculation = true;
+
+        var answer = matches
+            .Select(x => {
+                if(x.ToString() == "do()")
+                {
+                    doCalculation = true;
+                    return 0;
+                }
+                else if(x.ToString() == "don't()")
+                {
+                    doCalculation = false;
+                    return 0;
+                }
+
+                if(!doCalculation)
+                {
+                    return 0;
+                }
+                
+                var instructions = x.ToString().Replace("mul(", "").Replace(")", "").Split(',');
+                return int.Parse(instructions[0]) * int.Parse(instructions[1]);
+            })
+            .Sum();
+
+        return Task.FromResult(answer.ToString());
     }
 }
