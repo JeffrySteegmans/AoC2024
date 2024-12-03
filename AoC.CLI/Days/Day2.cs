@@ -1,5 +1,4 @@
-﻿
-namespace AoC.CLI.Days;
+﻿namespace AoC.CLI.Days;
 
 internal class Day2
     : IDay
