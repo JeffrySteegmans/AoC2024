@@ -1,4 +1,5 @@
-﻿using AoC.CLI;
+﻿using System.Reflection;
+using AoC.CLI;
 using AoC.CLI.Days;
 
 Dictionary<int, IDay> days = new()
@@ -24,12 +25,16 @@ static async Task<List<string>> ReadInput(
     int day)
 {
     var content = new List<string>();
-    var filePath = $"Days/Input/Day{day}.txt";
+
+    var assembly = Assembly.GetExecutingAssembly();
+    var resourcePath = assembly.GetManifestResourceNames()
+            .Single(str => str.EndsWith($"Day{day}.txt"));
 
     try
     {
         Console.WriteLine("Reading input...");
-        using var sr = new StreamReader(filePath);
+        using var stream = assembly.GetManifestResourceStream(resourcePath);
+        using var sr = new StreamReader(stream);
         
         var line = await sr.ReadLineAsync();
         while (line is not null)
