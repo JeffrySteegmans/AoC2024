@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using AoC.CLI;
 using AoC.CLI.Days;
 
@@ -14,29 +15,42 @@ Dictionary<int, IDay> days = new()
 
 Console.Write("Day: ");
 var day = int.Parse(Console.ReadLine());
+Console.WriteLine("---------------------");
 
 var input = await ReadInput(day);
 
 var dayToExecute = days[day];
 
+var stopWatch = new Stopwatch();
+
 Console.WriteLine("Calculating part 1...");
 Console.WriteLine("---------------------");
+stopWatch.Start();
 var answerPart1 = await dayToExecute.ExecutePart1(input);
-Console.Write($"Part 1: ");
+stopWatch.Stop();
 Console.ForegroundColor = ConsoleColor.Green;
 Console.WriteLine(answerPart1);
 Console.ResetColor();
 Console.WriteLine("---------------------");
+Console.ForegroundColor = ConsoleColor.DarkGray;
+Console.WriteLine($"Calculated in {stopWatch.ElapsedMilliseconds}ms");
+Console.ResetColor();
 Console.WriteLine("");
+
+stopWatch.Reset();
 
 Console.WriteLine("Calculating part 2...");
 Console.WriteLine("---------------------");
+stopWatch.Start();
 var answerPart2 = await dayToExecute.ExecutePart2(input);
-Console.Write($"Part 2: ");
+stopWatch.Stop();
 Console.ForegroundColor = ConsoleColor.Green;
 Console.WriteLine(answerPart2);
 Console.ResetColor();
 Console.WriteLine("---------------------");
+Console.ForegroundColor = ConsoleColor.DarkGray;
+Console.WriteLine($"Calculated in {stopWatch.ElapsedMilliseconds}ms");
+Console.ResetColor();
 Console.WriteLine("");
 
 static async Task<List<string>> ReadInput(
@@ -45,11 +59,13 @@ static async Task<List<string>> ReadInput(
     var content = new List<string>();
 
     var assembly = Assembly.GetExecutingAssembly();
-    var resourcePath = assembly.GetManifestResourceNames()
-            .Single(str => str.EndsWith($"Day{day}.txt"));
+    var resourcePath = assembly
+        .GetManifestResourceNames()
+        .Single(str => str.EndsWith($"Day{day}.txt"));
 
     try
     {
+        Console.WriteLine("");
         Console.Write("Reading input...");
         using var stream = assembly.GetManifestResourceStream(resourcePath);
         using var sr = new StreamReader(stream);
@@ -62,6 +78,7 @@ static async Task<List<string>> ReadInput(
         }
         sr.Close();
         Console.WriteLine("DONE");
+        Console.WriteLine("");
     }
     catch (Exception e)
     {
