@@ -20,10 +20,6 @@ internal class Day5
     {
         var rules = input.GetRules();
 
-        var invalidpages = input.GetPageNumbers().GetInvalid(rules);
-        var appliedRules = invalidpages.ApplyRules(rules);
-        var middlePagesNumbers = appliedRules.GetMiddlePageNumbers();
-
         var answer = input
             .GetPageNumbers()
             .GetInvalid(rules)
@@ -35,7 +31,7 @@ internal class Day5
     }
 }
 
-internal static class Extensions
+internal static class Day5Extensions
 {
     public static List<Rule> GetRules(
         this IEnumerable<string> input)
