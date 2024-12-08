@@ -17,7 +17,11 @@ internal class Day6
     public Task<string> ExecutePart2(
         IEnumerable<string> input)
     {
-        return Task.FromResult("Not implemented yet.");
+        var answer = input
+            .ParseMap()
+            .PossibleInfiniteLoops();
+
+        return Task.FromResult(answer.ToString());
     }
 }
 
@@ -145,6 +149,61 @@ internal static class Day6Extensions
         }
 
         return count;
+    }
+
+    public static int PossibleInfiniteLoops(
+        this char[,] map)
+    {
+        var startCoordinate = map.FindStart();
+
+        var infiniteLoops = 0;
+        for (var rowIndex = 0; rowIndex < map.GetLength(0); rowIndex++)
+        {
+            for (var colIndex = 0; colIndex < map.GetLength(1); colIndex++)
+            {
+                if (startCoordinate.Row == rowIndex && startCoordinate.Col == colIndex)
+                {
+                    continue;
+                }
+
+                if (map.IsInfinitLoop(new Coordinate(rowIndex, colIndex)))
+                {
+                    infiniteLoops++;
+                }
+            }
+        }
+
+        return infiniteLoops;
+    }
+
+    public static bool IsInfinitLoop(
+        this char[,] map,
+        Coordinate newObstacleCoordinate)
+    {
+        var currentCoordinate = map.FindStart();
+        var direction = Direction.Up;
+        var obstacleHistory = new List<(Coordinate coordinate, Direction direction)>();
+        while (map.InsideArea(currentCoordinate.Row, currentCoordinate.Col))
+        {
+            var nextCoordinate = GetCoordinate(currentCoordinate.Row, currentCoordinate.Col, direction);
+
+            while (nextCoordinate == newObstacleCoordinate || map.IsObstacle(nextCoordinate))
+            {
+                if (obstacleHistory.Any(x => x.coordinate == nextCoordinate && x.direction == direction))
+                {
+                    return true;
+                }
+
+                obstacleHistory.Add((nextCoordinate, direction));
+
+                direction = direction.Turn();
+                nextCoordinate = GetCoordinate(currentCoordinate.Row, currentCoordinate.Col, direction);
+            };
+
+            currentCoordinate = nextCoordinate;
+        };
+
+        return false;
     }
 }
 
