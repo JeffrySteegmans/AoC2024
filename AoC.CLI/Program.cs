@@ -18,11 +18,25 @@ var input = await ReadInput(day);
 
 var dayToExecute = days[day];
 
+Console.WriteLine("Calculating part 1...");
+Console.WriteLine("---------------------");
 var answerPart1 = await dayToExecute.ExecutePart1(input);
-var answerPart2 = await dayToExecute.ExecutePart2(input);
+Console.Write($"Part 1: ");
+Console.ForegroundColor = ConsoleColor.Green;
+Console.WriteLine(answerPart1);
+Console.ResetColor();
+Console.WriteLine("---------------------");
+Console.WriteLine("");
 
-Console.WriteLine($"Part 1: {answerPart1}");
-Console.WriteLine($"Part 2: {answerPart2}");
+Console.WriteLine("Calculating part 2...");
+Console.WriteLine("---------------------");
+var answerPart2 = await dayToExecute.ExecutePart2(input);
+Console.Write($"Part 2: ");
+Console.ForegroundColor = ConsoleColor.Green;
+Console.WriteLine(answerPart2);
+Console.ResetColor();
+Console.WriteLine("---------------------");
+Console.WriteLine("");
 
 static async Task<List<string>> ReadInput(
     int day)
@@ -35,7 +49,7 @@ static async Task<List<string>> ReadInput(
 
     try
     {
-        Console.WriteLine("Reading input...");
+        Console.Write("Reading input...");
         using var stream = assembly.GetManifestResourceStream(resourcePath);
         using var sr = new StreamReader(stream);
         
@@ -46,6 +60,7 @@ static async Task<List<string>> ReadInput(
             line = await sr.ReadLineAsync();
         }
         sr.Close();
+        Console.WriteLine("DONE");
     }
     catch (Exception e)
     {
