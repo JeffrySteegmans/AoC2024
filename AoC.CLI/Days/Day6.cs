@@ -1,4 +1,5 @@
 ﻿using AoC.CLI.Extensions;
+using AoC.CLI.Models;
 
 namespace AoC.CLI.Days;
 
@@ -190,8 +191,6 @@ internal static class Day6Extensions
         return false;
     }
 }
-
-internal record Coordinate(int Row, int Col);
 
 internal enum Direction
 {
