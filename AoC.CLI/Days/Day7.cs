@@ -18,7 +18,13 @@ internal class Day7
     public Task<string> ExecutePart2(
         IEnumerable<string> input)
     {
-        return Task.FromResult("Not implemented yet");
+        var answer = input
+            .ParseEquations()
+            .Where(x => x.IsValid(true))
+            .Sum(x => x.Value)
+            .ToString();
+
+        return Task.FromResult(answer);
     }
 }
 
@@ -51,18 +57,27 @@ internal record Equation(
     long Value,
     List<int> Parameters)
 {
-    public bool IsValid()
+    public bool IsValid(
+        bool concatenationEnabled = false)
     {
         var result = Parameters[0];
 
-        if(Validate(result, 1, (a, b) => a + b))
+        if(Validate(result, 1, (a, b) => a + b, concatenationEnabled))
         {
             return true;
         }
 
-        if (Validate(result, 1, (a, b) => a * b))
+        if (Validate(result, 1, (a, b) => a * b, concatenationEnabled))
         {
             return true;
+        }
+
+        if (concatenationEnabled)
+        {
+            if (Validate(result, 1, (a, b) => long.Parse($"{a}{b}"), concatenationEnabled))
+            {
+                return true;
+            }
         }
 
         return false;
@@ -71,7 +86,8 @@ internal record Equation(
     private bool Validate(
         long result,
         int index,
-        Func<long, int, long> calculate)
+        Func<long, int, long> calculate,
+        bool concatenationEnabled)
     {
         result = calculate(result, Parameters[index]);
 
@@ -80,12 +96,17 @@ internal record Equation(
             return result == Value;
         }
 
-        if (Validate(result, index + 1, (a, b) => a + b))
+        if (Validate(result, index + 1, (a, b) => a + b, concatenationEnabled))
         {
             return true;
         }
 
-        if (Validate(result, index + 1, (a, b) => a * b))
+        if (Validate(result, index + 1, (a, b) => a * b, concatenationEnabled))
+        {
+            return true;
+        }
+
+        if (Validate(result, index + 1, (a, b) => long.Parse($"{a}{b}"), concatenationEnabled))
         {
             return true;
         }
