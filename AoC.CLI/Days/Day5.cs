@@ -18,7 +18,20 @@ internal class Day5
     public Task<string> ExecutePart2(
       IEnumerable<string> input)
     {
-        return Task.FromResult("Not implemented");
+        var rules = input.GetRules();
+
+        var invalidpages = input.GetPageNumbers().GetInvalid(rules);
+        var appliedRules = invalidpages.ApplyRules(rules);
+        var middlePagesNumbers = appliedRules.GetMiddlePageNumbers();
+
+        var answer = input
+            .GetPageNumbers()
+            .GetInvalid(rules)
+            .ApplyRules(rules)
+            .GetMiddlePageNumbers()
+            .Sum();
+
+        return Task.FromResult(answer.ToString());
     }
 }
 
@@ -80,6 +93,77 @@ internal static class Extensions
         }
 
         return validPageNumbers;
+    }
+
+    public static List<List<int>> GetInvalid(
+        this List<List<int>> pageNumbers,
+        List<Rule> rules)
+    {
+        var validPageNumbers = new List<List<int>>();
+
+        foreach (var pages in pageNumbers)
+        {
+            var isValid = rules
+                .Where(x => pages.Contains(x.firstPageNumber) && pages.Contains(x.secondPageNumber))
+                .All(x => pages.IndexOf(x.firstPageNumber) < pages.IndexOf(x.secondPageNumber));
+
+            if (!isValid)
+            {
+                validPageNumbers.Add(pages);
+            }
+        }
+
+        return validPageNumbers;
+    }
+
+    public static List<List<int>> ApplyRules(
+        this List<List<int>> pageNumbers,
+        List<Rule> rules)
+    {
+        var validPageNumbers = new List<List<int>>();
+
+        foreach (var page in pageNumbers)
+        {
+            var aplicableRules = rules
+                .Where(x => page.Contains(x.firstPageNumber) && page.Contains(x.secondPageNumber));
+
+            List<int> orderedPage = [.. page];
+
+            do
+            {
+                foreach (var rule in aplicableRules)
+                {
+                    orderedPage = orderedPage.ApplyRule(rule);
+                }
+            } while (orderedPage.IsInvalid(aplicableRules));
+
+            validPageNumbers.Add(orderedPage);
+        }
+
+        return validPageNumbers;
+    }
+
+    private static bool IsInvalid(
+        this List<int> page,
+        IEnumerable<Rule> rules)
+    {
+        return rules
+            .Any(x => page.Contains(x.firstPageNumber) && page.Contains(x.secondPageNumber) && page.IndexOf(x.firstPageNumber) > page.IndexOf(x.secondPageNumber));
+    }
+
+    private static List<int> ApplyRule(
+    this List<int> page,
+    Rule rule)
+    {
+        var indexA = page.IndexOf(rule.firstPageNumber);
+        var indexB = page.IndexOf(rule.secondPageNumber);
+
+        if (indexA > indexB)
+        {
+            (page[indexA], page[indexB]) = (page[indexB], page[indexA]);
+        }
+
+        return page;
     }
 
     public static List<int> GetMiddlePageNumbers(
