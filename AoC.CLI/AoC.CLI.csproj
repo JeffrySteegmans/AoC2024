@@ -11,9 +11,4 @@
     <EmbeddedResource Include="Days/Input/**/*.txt" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Remove="days\input\Day6.txt" />
-    <None Remove="days\input\Day7.txt" />
-  </ItemGroup>
-
 </Project>
