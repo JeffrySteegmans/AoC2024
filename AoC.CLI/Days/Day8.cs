@@ -27,7 +27,17 @@ internal class Day8
     public Task<string> ExecutePart2(
         IEnumerable<string> input)
     {
-        return Task.FromResult("Not implemented");
+        var map = input
+            .ParseMap();
+
+        var answer = map
+            .FindAntennas()
+            .CalculateAntiNodes(map, true)
+            .Distinct()
+            .Count()
+            .ToString();
+
+        return Task.FromResult(answer);
     }
 }
 
@@ -59,7 +69,8 @@ internal static class Day8Extensions
 
     public static List<Coordinate> CalculateAntiNodes(
         this List<Antenna> antennas,
-        char[,] map)
+        char[,] map,
+        bool resonate = false)
     {
         var rows = map.GetLength(0);
         var cols = map.GetLength(1);
@@ -76,21 +87,41 @@ internal static class Day8Extensions
 
                 foreach (var item in temp)
                 {
-                    var newRow = coordinate.Row + (coordinate.Row - item.Row);
-                    var newCol = coordinate.Col + (coordinate.Col - item.Col);
+                    var rowOperation = (coordinate.Row - item.Row);
+                    var colOperation = (coordinate.Col - item.Col);
 
-                    if (newRow < 0 || newRow >= rows)
+                    if (resonate)
                     {
-                        continue;
-                    }
+                        var currentRow = coordinate.Row;
+                        var currentCol = coordinate.Col;
 
-                    if (newCol < 0 || newCol >= cols)
+                        while (currentRow >= 0 && currentRow < rows && currentCol >= 0 && currentCol < cols)
+                        {
+                            antiNodes
+                                .Add(new Coordinate(currentRow, currentCol));
+
+                            currentRow += rowOperation;
+                            currentCol += colOperation;
+                        }
+                    }
+                    else
                     {
-                        continue;
-                    }
+                        var newRow = coordinate.Row + rowOperation;
+                        var newCol = coordinate.Col + colOperation;
 
-                    antiNodes
-                        .Add(new Coordinate(newRow, newCol));
+                        if (newRow < 0 || newRow >= rows)
+                        {
+                            continue;
+                        }
+
+                        if (newCol < 0 || newCol >= cols)
+                        {
+                            continue;
+                        }
+
+                        antiNodes
+                            .Add(new Coordinate(newRow, newCol));
+                    }
                 }
             }
         }
