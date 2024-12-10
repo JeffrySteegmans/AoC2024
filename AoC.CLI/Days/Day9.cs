@@ -74,17 +74,26 @@ internal static class Day9Extensions
     {
         List<string> defragmentedBlocks = [..fragmentedBlocks];
 
+        var lastFileIndex = defragmentedBlocks.Count - 1;
+
         for (var i = 0; i < defragmentedBlocks.Count; i++)
         {
-            var lastFileIndex = defragmentedBlocks.LastIndexOf(defragmentedBlocks.Last(x => x != "."));
-
-            if (lastFileIndex <= i)
-            {
-                break;
-            }
-
             if (defragmentedBlocks[i] == ".")
             {
+                for (var j = lastFileIndex; j >= 0; j--)
+                {
+                    if (defragmentedBlocks[j] != ".")
+                    {
+                        lastFileIndex = j;
+                        break;
+                    }
+                }
+
+                if (lastFileIndex <= i)
+                {
+                    break;
+                }
+
                 (defragmentedBlocks[i], defragmentedBlocks[lastFileIndex]) = (defragmentedBlocks[lastFileIndex], defragmentedBlocks[i]);
             }
         }
