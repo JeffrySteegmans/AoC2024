@@ -1,4 +1,5 @@
-﻿using AoC.CLI.Extensions;
+﻿using AoC.CLI.Enums;
+using AoC.CLI.Extensions;
 using AoC.CLI.Models;
 
 namespace AoC.CLI.Days;
@@ -190,12 +191,4 @@ internal static class Day6Extensions
 
         return false;
     }
-}
-
-internal enum Direction
-{
-    Up,
-    Right,
-    Down,
-    Left
 }

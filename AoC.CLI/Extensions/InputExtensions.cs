@@ -19,4 +19,22 @@ internal static class InputExtensions
 
         return map;
     }
+
+    public static T[,] ParseMap<T>(
+        this IEnumerable<string> input) where T : struct
+    {
+        var inputArray = input.ToArray();
+        var map = new T[inputArray[0].Length, inputArray.Length];
+
+        for (var rowIndex = 0; rowIndex < inputArray.Length; rowIndex++)
+        {
+            var line = inputArray[rowIndex].ToCharArray();
+            for (var colIndex = 0; colIndex < line.Length; colIndex++)
+            {
+                map[rowIndex, colIndex] = (T)Convert.ChangeType(line[colIndex].ToString(), typeof(T));;
+            }
+        }
+
+        return map;
+    }
 }
