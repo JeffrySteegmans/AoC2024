@@ -12,28 +12,37 @@ public class Day10
     {
         var map = new TopographicMap(input);
 
-        var trailHeads = await map.GetTrailHeads();
+        await map.CalculateScores();
 
-        var answer = trailHeads
+        var answer = map.TrailHeads
             .Sum(x => x.Score)
             .ToString();
 
         return answer;
     }
 
-    public Task<string> ExecutePart2(
+    public async Task<string> ExecutePart2(
         IEnumerable<string> input)
     {
-        var answer = "Not implemented";
+        var map = new TopographicMap(input);
 
-        return Task.FromResult(answer);
+        await map.CalculateRatings();
+
+        var answer = map.TrailHeads
+            .Sum(x => x.Rating)
+            .ToString();
+
+        return answer;
     }
 }
 
 internal class TopographicMap
 {
     private readonly int[,] _map;
-    private List<Coordinate> _trailEnds;
+    private List<TrailHead> _trailHeads;
+    private readonly List<Coordinate> _trailEnds;
+
+    public IReadOnlyCollection<TrailHead> TrailHeads => _trailHeads;
 
     public TopographicMap(
         IEnumerable<string> input)
@@ -41,10 +50,11 @@ internal class TopographicMap
         _map = input
             .ParseMap<int>();
 
+        _trailHeads = GetTrailHeads();
         _trailEnds = GetTrailEnds();
     }
 
-    public async Task<List<TrailHead>> GetTrailHeads()
+    private List<TrailHead> GetTrailHeads()
     {
         var trailHeads = new List<TrailHead>();
 
@@ -55,12 +65,12 @@ internal class TopographicMap
                 if (_map[row, col] == 0)
                 {
                     trailHeads
-                        .Add(new TrailHead(new Coordinate(row, col), 0));
+                        .Add(new TrailHead(new Coordinate(row, col), 0, 0));
                 }
             }
         }
 
-        return await CalculateTrailHeadScores(trailHeads);
+        return trailHeads;
     }
 
     private List<Coordinate> GetTrailEnds()
@@ -82,13 +92,17 @@ internal class TopographicMap
         return trailEnds;
     }
 
-    private async Task<List<TrailHead>> CalculateTrailHeadScores(
-        List<TrailHead> trailHeads)
+    public async Task CalculateScores()
+    {
+        _trailHeads = await CalculateTrailHeadScores();
+    }
+
+    private async Task<List<TrailHead>> CalculateTrailHeadScores()
     {
         var trailHeadsWithScore = new List<TrailHead>();
 
         var options = new ParallelOptions { MaxDegreeOfParallelism = 6 };
-        await Parallel.ForEachAsync(trailHeads, options, async (trailHead, _) =>
+        await Parallel.ForEachAsync(_trailHeads, options, async (trailHead, _) =>
         {
             var trailHeadScore = await CalculateTrailHeadScore(trailHead);
             trailHeadsWithScore.Add(
@@ -113,6 +127,43 @@ internal class TopographicMap
         }
 
         return score;
+    }
+
+    public async Task CalculateRatings()
+    {
+        _trailHeads = await CalculateTrailHeadRatings();
+    }
+
+    private async Task<List<TrailHead>> CalculateTrailHeadRatings()
+    {
+        var trailHeadsWithRating = new List<TrailHead>();
+
+        var options = new ParallelOptions { MaxDegreeOfParallelism = 6 };
+        await Parallel.ForEachAsync(_trailHeads, options, async (trailHead, _) =>
+        {
+            var trailHeadRating = await CalculateTrailHeadRating(trailHead);
+            trailHeadsWithRating.Add(
+                trailHead with { Rating = trailHeadRating});
+        });
+
+        return trailHeadsWithRating;
+    }
+
+    private async Task<int> CalculateTrailHeadRating(
+        TrailHead trailHead)
+    {
+        Task<int>[] tasks =
+        [
+            Task.Run(() => Move(0, trailHead.Coordinate, Direction.Right)),
+            Task.Run(() => Move(0, trailHead.Coordinate, Direction.Down)),
+            Task.Run(() => Move(0, trailHead.Coordinate, Direction.Left)),
+            Task.Run(() => Move(0, trailHead.Coordinate, Direction.Up))
+        ];
+
+        var results = await Task.WhenAll(tasks);
+
+        return results
+            .Sum(x => x);
     }
 
     private async Task<bool> IsHike(
@@ -170,37 +221,43 @@ internal class TopographicMap
             .Any(x => x);
     }
 
-    // private int Move(
-    //     int currentScore,
-    //     int currentHeight,
-    //     Coordinate currentCoordinate,
-    //     Direction direction)
-    // {
-    //     var nextCoordinate = currentCoordinate.Move(direction);
-    //     if (IsInvalidCoordinate(nextCoordinate))
-    //     {
-    //         return currentScore;
-    //     }
-    //
-    //     var nextHeight = GetHeight(nextCoordinate);
-    //
-    //     if (nextHeight == 9)
-    //     {
-    //         return ++currentScore;
-    //     }
-    //
-    //     if (nextHeight - currentHeight == 1)
-    //     {
-    //         var score = Move(currentScore, nextHeight, nextCoordinate, Direction.Right);
-    //         score += Move(currentScore, nextHeight, nextCoordinate, Direction.Down);
-    //         score += Move(currentScore, nextHeight, nextCoordinate, Direction.Left);
-    //         score += Move(currentScore, nextHeight, nextCoordinate, Direction.Up);
-    //
-    //         return currentScore + score;
-    //     }
-    //
-    //     return currentScore;
-    // }
+    private async Task<int> Move(
+        int rating,
+        Coordinate currentLocation,
+        Direction direction)
+    {
+        var nextLocation = currentLocation.Move(direction);
+        if (IsInvalidLocation(nextLocation))
+        {
+            return rating;
+        }
+
+        var currentHeight = GetHeight(currentLocation);
+        var nextHeight = GetHeight(nextLocation);
+        if (nextHeight - currentHeight != 1)
+        {
+            return rating;
+        }
+
+        if (nextHeight == 9)
+        {
+            rating += 1;
+            return rating;
+        }
+
+        Task<int>[] tasks =
+        [
+            Task.Run(() => Move(0, nextLocation, Direction.Right)),
+            Task.Run(() => Move(0, nextLocation, Direction.Down)),
+            Task.Run(() => Move(0, nextLocation, Direction.Left)),
+            Task.Run(() => Move(0, nextLocation, Direction.Up))
+        ];
+
+        var results = await Task.WhenAll(tasks);
+
+        return rating + results
+            .Sum(x => x);
+    }
 
     private bool IsInvalidLocation(
         Coordinate coordinate)
@@ -217,4 +274,5 @@ internal class TopographicMap
 
 internal record TrailHead(
     Coordinate Coordinate,
-    int Score);
+    int Score,
+    int Rating);
