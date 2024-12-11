@@ -12,17 +12,14 @@ public class Day11
             .Select(x => new Stone(long.Parse(x)))
             .ToList();
 
-        var transformedStones = new List<Stone>();
+        long numberOfStones = 0;
 
         foreach (var stone in stones)
         {
-            var transformationResults = TransformSequence(stone, 25);
-            transformedStones
-                .AddRange(transformationResults);
+            numberOfStones += TransformSequence(stone, 25);
         }
 
-        var answer = transformedStones
-            .Count
+        var answer = numberOfStones
             .ToString();
 
         return Task.FromResult(answer);
@@ -34,7 +31,7 @@ public class Day11
         return Task.FromResult("Not implemented");
     }
 
-    private static List<Stone> TransformSequence(
+    private static long TransformSequence(
         Stone stone,
         int numberOfTransformations)
     {
@@ -45,7 +42,7 @@ public class Day11
             stones = Transform(stones);
         }
 
-        return stones;
+        return stones.Count;
     }
 
     private static List<Stone> Transform(
