@@ -1,6 +1,4 @@
-﻿using System.Xml.Xsl;
-
-namespace AoC.CLI.Days;
+﻿namespace AoC.CLI.Days;
 
 public class Day11
     : IDay
@@ -56,37 +54,6 @@ public class Stones
             .ToList()
             .ForEach(x => _stones.TryAdd(x, 1));
     }
-
-    // public void Blink()
-    // {
-    //     var numberOfStones = _stones.Count;
-    //     
-    //     for (var i = 0; i < numberOfStones; i++)
-    //     {
-    //         if (_stones[i].Value == 0)
-    //         {
-    //             _stones[i].Value++;
-    //             continue;
-    //         }
-    //         
-    //         var stoneDigits = GetDigits(_stones[i].Value).ToArray();
-    //         if (stoneDigits.Length % 2 == 0)
-    //         {
-    //             var chunks = stoneDigits
-    //                 .Chunk(stoneDigits.Length / 2)
-    //                 .ToArray();
-    //
-    //             _stones[i].Value = chunks[0]
-    //                 .Reverse()
-    //                 .Aggregate((seed, digit) => seed * 10 + digit);
-    //             
-    //             _stones.Add(new Stone(chunks[1].Reverse().Aggregate((seed, digit) => seed * 10 + digit)));
-    //             continue;
-    //         }
-    //
-    //         _stones[i].Value *= 2024;
-    //     }
-    // }
 
     public void Blink()
     {
