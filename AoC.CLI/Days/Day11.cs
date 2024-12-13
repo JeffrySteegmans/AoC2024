@@ -6,78 +6,118 @@ public class Day11
     public Task<string> ExecutePart1(
         IEnumerable<string> input)
     {
-        var stones = input
-            .First()
-            .Split(" ")
-            .Select(x => new Stone(long.Parse(x)))
-            .ToList();
+        var stones = new Stones(input);
 
-        long numberOfStones = 0;
-
-        foreach (var stone in stones)
+        for (var i = 0; i < 25; i++)
         {
-            numberOfStones += TransformSequence(stone, 25);
+            stones.Blink();
         }
-
-        var answer = numberOfStones
+        
+        var answer = stones
+            .Count
             .ToString();
-
+        
         return Task.FromResult(answer);
     }
 
     public Task<string> ExecutePart2(
         IEnumerable<string> input)
     {
-        return Task.FromResult("Not implemented");
-    }
+        var stones = new Stones(input);
 
-    private static long TransformSequence(
-        Stone stone,
-        int numberOfTransformations)
-    {
-        List<Stone> stones = [ stone ];
-
-        for (var i = 0; i < numberOfTransformations; i++)
+        for (var i = 0; i < 75; i++)
         {
-            stones = Transform(stones);
+            stones.Blink();
         }
-
-        return stones.Count;
-    }
-
-    private static List<Stone> Transform(
-        List<Stone> stones)
-    {
-        var transformedStones = new List<Stone>();
-
-        foreach (var stone in stones)
-        {
-            if (stone.Value == 0)
-            {
-                transformedStones.Add(new Stone(1));
-                continue;
-            }
-
-            if (stone.Value.ToString().Length % 2 == 0)
-            {
-                var spanValue = stone.Value.ToString().AsSpan();
-                var firstStoneValue = spanValue[..(spanValue.Length/2)];
-                var secondStoneValue = spanValue[(spanValue.Length/2)..spanValue.Length];
-
-                transformedStones.Add(new Stone(long.Parse(firstStoneValue.ToString())));
-                transformedStones.Add(new Stone(long.Parse(secondStoneValue.ToString())));
-                continue;
-            }
-
-            transformedStones.Add(new Stone(stone.Value * 2024));
-        }
-
-        return transformedStones;
+        
+        var answer = stones
+            .Count
+            .ToString();
+        
+        return Task.FromResult(answer);
     }
 }
 
-internal class Stone(
-    long value)
+public class Stones
 {
-    public long Value { get; set; } = value;
+    public long Count => _stones.Sum(x => x.Value);
+    
+    private Dictionary<long, long> _stones = new();
+    
+    public Stones(
+        IEnumerable<string> input)
+    {
+        input
+            .First()
+            .Split(' ')
+            .Select(long.Parse)
+            .ToList()
+            .ForEach(x => _stones.TryAdd(x, 1));
+    }
+
+    public void Blink()
+    {
+        var newStones = new Dictionary<long, long>();
+
+        foreach (var stone in _stones)
+        {
+            if (stone.Key == 0)
+            {
+                newStones.TryGetValue(1, out var value1);
+                newStones[1] = stone.Value + value1;
+                continue;
+            }
+
+            var (left, right) = Split(stone.Key);
+            if (left != long.MinValue && right != long.MinValue)
+            {   
+                newStones.TryGetValue(left, out var value2);
+                newStones[left] = stone.Value + value2;
+                
+                newStones.TryGetValue(right, out var value3);
+                newStones[right] = stone.Value + value3;
+                continue;
+            }
+
+            var newStoneValue = stone.Key * 2024;
+            newStones.TryGetValue(newStoneValue, out var value4);
+            newStones[newStoneValue] = stone.Value + value4; 
+        }
+        
+        _stones = newStones;
+    }
+
+    private static (long left, long right) Split(
+        long number)
+    {
+        var digits = GetDigits(number).Reverse().ToArray();
+
+        if (digits.Length % 2 != 0)
+        {
+            return (long.MinValue, long.MinValue);
+        }
+
+        var chunks = digits
+            .Chunk(digits.Length / 2)
+            .ToArray();
+                
+        var left = chunks[0]
+            .Aggregate((seed, digit) => seed * 10 + digit);
+        
+        var right = chunks[1]
+            .Aggregate((seed, digit) => seed * 10 + digit);
+        
+        return (left, right);
+    }
+    
+    private static IEnumerable<long> GetDigits(
+        long source)
+    {
+        while (source > 0)
+        {
+            var digit = source % 10;
+            source /= 10;
+            yield return digit;
+        }
+    }
 }
