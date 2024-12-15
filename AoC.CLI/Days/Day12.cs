@@ -33,6 +33,8 @@ internal class Garden(IEnumerable<string> input)
 
     public Garden CalculateRegions()
     {
+        var visited = new bool[_garden.GetLength(0), _garden.GetLength(1)];
+
         for (var row = 0; row < _garden.GetLength(0); row++)
         {
             for (var col = 0; col < _garden.GetLength(1); col++)
@@ -40,14 +42,14 @@ internal class Garden(IEnumerable<string> input)
                 var currentCoordinate = new Coordinate(row, col);
                 var plant = _garden[row, col];
 
-                if (_regions.Any(x => x.Coordinates.Any(y => y == currentCoordinate)))
+                if (visited[currentCoordinate.Row, currentCoordinate.Col])
                 {
                     continue;
                 }
 
                 var region = new Region(plant)
                 {
-                    Coordinates = FindNeighbours(_garden, plant, currentCoordinate, [])
+                    Coordinates = FindNeighbours(_garden, plant, currentCoordinate, [], visited)
                 };
                 _regions.Add(region);
             }
@@ -60,10 +62,16 @@ internal class Garden(IEnumerable<string> input)
         char[,] source,
         char plant,
         Coordinate currentCoordinate,
-        List<Coordinate> regionCoordinates)
+        List<Coordinate> regionCoordinates,
+        bool[,] visited)
     {
         if (currentCoordinate.Row < 0 || currentCoordinate.Row >= source.GetLength(0) ||
             currentCoordinate.Col < 0 || currentCoordinate.Col >= source.GetLength(1))
+        {
+            return regionCoordinates;
+        }
+
+        if (visited[currentCoordinate.Row, currentCoordinate.Col])
         {
             return regionCoordinates;
         }
@@ -79,11 +87,12 @@ internal class Garden(IEnumerable<string> input)
         }
 
         regionCoordinates.Add(currentCoordinate);
+        visited[currentCoordinate.Row, currentCoordinate.Col] = true;
 
-        regionCoordinates = FindNeighbours(source, plant, currentCoordinate.Move(Direction.Right), regionCoordinates);
-        regionCoordinates = FindNeighbours(source, plant, currentCoordinate.Move(Direction.Down), regionCoordinates);
-        regionCoordinates = FindNeighbours(source, plant, currentCoordinate.Move(Direction.Left), regionCoordinates);
-        regionCoordinates = FindNeighbours(source, plant, currentCoordinate.Move(Direction.Up), regionCoordinates);
+        regionCoordinates = FindNeighbours(source, plant, currentCoordinate.Move(Direction.Right), regionCoordinates, visited);
+        regionCoordinates = FindNeighbours(source, plant, currentCoordinate.Move(Direction.Down), regionCoordinates, visited);
+        regionCoordinates = FindNeighbours(source, plant, currentCoordinate.Move(Direction.Left), regionCoordinates, visited);
+        regionCoordinates = FindNeighbours(source, plant, currentCoordinate.Move(Direction.Up), regionCoordinates, visited);
 
         return regionCoordinates;
     }
@@ -103,31 +112,6 @@ internal class Garden(IEnumerable<string> input)
         return _regions
             .Select(x => x.Price)
             .Sum();
-    }
-
-    private static List<Coordinate> FindNeighbours(
-        List<Coordinate> source,
-        Coordinate currentCoordinate,
-        List<Coordinate> regionCoordinates)
-    {
-        if (source.All(x => x != currentCoordinate))
-        {
-            return regionCoordinates;
-        }
-
-        if (regionCoordinates.Any(x => x == currentCoordinate))
-        {
-            return regionCoordinates;
-        }
-
-        regionCoordinates.Add(currentCoordinate);
-
-        regionCoordinates = FindNeighbours(source, currentCoordinate.Move(Direction.Right), regionCoordinates);
-        regionCoordinates = FindNeighbours(source, currentCoordinate.Move(Direction.Down), regionCoordinates);
-        regionCoordinates = FindNeighbours(source, currentCoordinate.Move(Direction.Left), regionCoordinates);
-        regionCoordinates = FindNeighbours(source, currentCoordinate.Move(Direction.Up), regionCoordinates);
-
-        return regionCoordinates;
     }
 }
 
