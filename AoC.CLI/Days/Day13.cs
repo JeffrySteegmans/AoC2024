@@ -9,12 +9,10 @@ public class Day13
     public Task<string> ExecutePart1(
         IEnumerable<string> input)
     {
-        var clawMachines = input
+        var answer = input
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Chunk(3)
-            .Select(x => new ClawMachine(x));
-
-        var answer = clawMachines
+            .Select(x => new ClawMachine(x))
             .Sum(clawMachine => clawMachine.CalculateLeastTokens())
             .ToString();
 
@@ -24,7 +22,14 @@ public class Day13
     public Task<string> ExecutePart2(
         IEnumerable<string> input)
     {
-        return Task.FromResult("No implemented");
+        var answer = input
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Chunk(3)
+            .Select(x => new ClawMachine(x))
+            .Sum(clawMachine => clawMachine.CalculateLeastTokensCorrected())
+            .ToString();
+
+        return Task.FromResult(answer);
     }
 }
 
@@ -108,6 +113,48 @@ internal class ClawMachine
             var buttonBClicks = i;
 
             return buttonAClicksX * 3 + buttonBClicks;
+        }
+
+        return 0;
+    }
+
+    public long CalculateLeastTokensCorrected()
+    {
+        Console.Write(".");
+        var correction = 10_000_000_000_000;
+
+        var prizeLocationX = _prizeLocation.X + correction;
+        var prizeLocationY = _prizeLocation.Y + correction;
+
+        var leastClicksBButtonX = prizeLocationX / _buttonB.XAction;
+        var leastClicksBButtonY = prizeLocationY / _buttonB.YAction;
+
+        var bButtonClicks = leastClicksBButtonX < leastClicksBButtonY ?
+            leastClicksBButtonX :
+            leastClicksBButtonY;
+
+        var aButtonClicks = 0;
+        //TODO: Binary tree search????
+        for (var i = bButtonClicks; i > 0; i--)
+        {
+            var x = i * _buttonB.XAction;
+            var y = i * _buttonB.YAction;
+
+            if ((prizeLocationX - x) % _buttonA.XAction > 0 ||
+                (prizeLocationY - y) % _buttonA.YAction > 0)
+            {
+                continue;
+            }
+
+            var buttonAClicksX = (prizeLocationY - x) / _buttonA.XAction;
+            var buttonAClicksY = (prizeLocationY - y) / _buttonA.YAction;
+
+            if (buttonAClicksX != buttonAClicksY)
+            {
+                continue;
+            }
+
+            return buttonAClicksX * 3 + bButtonClicks;
         }
 
         return 0;
