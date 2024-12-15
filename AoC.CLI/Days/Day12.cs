@@ -1,6 +1,7 @@
 ﻿using AoC.CLI.Enums;
 using AoC.CLI.Extensions;
 using AoC.CLI.Models;
+using Microsoft.CSharp.RuntimeBinder;
 
 namespace AoC.CLI.Days;
 
@@ -22,14 +23,20 @@ public class Day12
     public Task<string> ExecutePart2(
         IEnumerable<string> input)
     {
-        return Task.FromResult("Not implemented");
+        var answer = new Garden(input)
+            .CalculateRegions()
+            .CalculateSides()
+            .CalculatePriceWithBulkDiscount()
+            .ToString();
+
+        return Task.FromResult(answer);
     }
 }
 
 internal class Garden(IEnumerable<string> input)
 {
     private readonly char[,] _garden = input.ParseMap();
-    private List<Region> _regions = [];
+    private readonly List<Region> _regions = [];
 
     public Garden CalculateRegions()
     {
@@ -107,10 +114,27 @@ internal class Garden(IEnumerable<string> input)
         return this;
     }
 
+    public Garden CalculateSides()
+    {
+        foreach (var region in _regions)
+        {
+            region.CalculateSides(_garden);
+        }
+
+        return this;
+    }
+
     public int CalculatePrice()
     {
         return _regions
             .Select(x => x.Price)
+            .Sum();
+    }
+
+    public int CalculatePriceWithBulkDiscount()
+    {
+        return _regions
+            .Select(x => x.PriceBulkDiscount)
             .Sum();
     }
 }
@@ -118,11 +142,13 @@ internal class Garden(IEnumerable<string> input)
 internal class Region(
     char plantType)
 {
+    private int _perimeter = 0;
+    private int _sides = 0;
+
     public char PlantType => plantType;
-    public List<Coordinate> Coordinates { get; set; } = [];
-    public int Area => Coordinates.Count;
-    public int Perimeter { get; private set; } = 0;
-    public int Price => Area * Perimeter;
+    public List<Coordinate> Coordinates { get; init; } = [];
+    public int Price => Coordinates.Count * _perimeter;
+    public int PriceBulkDiscount => Coordinates.Count * _sides;
 
     public void CalculatePerimeter()
     {
@@ -132,20 +158,86 @@ internal class Region(
                 .GetNeighbours(coordinate)
                 .Count;
 
-            Perimeter += 4 - neighbours;
+            _perimeter += 4 - neighbours;
         }
     }
-}
 
-internal static class CoordinateExtensions{
-    public static List<Coordinate> GetNeighbours(
-        this List<Coordinate> coordinates,
+    public void CalculateSides(
+        char [,] garden)
+    {
+        foreach (var coordinate in Coordinates)
+        {
+            _sides += GetCorners(garden, coordinate);
+        }
+    }
+
+    private int GetCorners(
+        char[,] garden,
         Coordinate coordinate)
     {
-        return coordinates
-            .FindAll(x => x.Row == coordinate.Row && x.Col == coordinate.Col - 1 ||
-                          x.Row == coordinate.Row && x.Col == coordinate.Col + 1 ||
-                          x.Row == coordinate.Row - 1 && x.Col == coordinate.Col ||
-                          x.Row == coordinate.Row + 1 && x.Col == coordinate.Col);
+        var up = coordinate.Move(Direction.Up);
+        var upRight = coordinate.Move(Direction.Up).Move(Direction.Right);
+        var right = coordinate.Move(Direction.Right);
+        var downRight = coordinate.Move(Direction.Down).Move(Direction.Right);
+        var down = coordinate.Move(Direction.Down);
+        var downLeft = coordinate.Move(Direction.Down).Move(Direction.Left);
+        var left = coordinate.Move(Direction.Left);
+        var upLeft = coordinate.Move(Direction.Up).Move(Direction.Left);
+
+        var corners = 0;
+
+        if ((!garden.IsInside(up) || garden[up.Row, up.Col] != plantType) &&
+            (!garden.IsInside(left) || garden[left.Row, left.Col] != plantType))
+        {
+            corners++;
+        }
+
+        if ((!garden.IsInside(up) || garden[up.Row, up.Col] != plantType) &&
+            (!garden.IsInside(right) || garden[right.Row, right.Col] != plantType))
+        {
+            corners++;
+        }
+
+        if ((!garden.IsInside(down) || garden[down.Row, down.Col] != plantType) &&
+            (!garden.IsInside(left) || garden[left.Row, left.Col] != plantType))
+        {
+            corners++;
+        }
+
+        if ((!garden.IsInside(down) || garden[down.Row, down.Col] != plantType) &&
+            (!garden.IsInside(right) || garden[right.Row, right.Col] != plantType))
+        {
+            corners++;
+        }
+
+        if (garden.IsInside(up) && garden[up.Row, up.Col] == plantType &&
+            garden.IsInside(right) && garden[right.Row, right.Col] == plantType &&
+            garden[upRight.Row, upRight.Col] != plantType)
+        {
+            corners++;
+        }
+
+        if (garden.IsInside(down) && garden[down.Row, down.Col] == plantType &&
+            garden.IsInside(right) && garden[right.Row, right.Col] == plantType &&
+            garden[downRight.Row, downRight.Col] != plantType)
+        {
+            corners++;
+        }
+
+        if (garden.IsInside(down) && garden[down.Row, down.Col] == plantType &&
+            garden.IsInside(left) && garden[left.Row, left.Col] == plantType &&
+            garden[downLeft.Row, downLeft.Col] != plantType)
+        {
+            corners++;
+        }
+
+        if (garden.IsInside(up) && garden[up.Row, up.Col] == plantType &&
+            garden.IsInside(left) && garden[left.Row, left.Col] == plantType &&
+            garden[upLeft.Row, upLeft.Col] != plantType)
+        {
+            corners++;
+        }
+
+        return corners;
     }
 }
