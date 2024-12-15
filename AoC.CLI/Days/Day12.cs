@@ -33,8 +33,6 @@ internal class Garden(IEnumerable<string> input)
 
     public Garden CalculateRegions()
     {
-        var plants = new Dictionary<char, List<Coordinate>>();
-
         for (var row = 0; row < _garden.GetLength(0); row++)
         {
             for (var col = 0; col < _garden.GetLength(1); col++)
@@ -42,37 +40,52 @@ internal class Garden(IEnumerable<string> input)
                 var currentCoordinate = new Coordinate(row, col);
                 var plant = _garden[row, col];
 
-                plants.TryGetValue(plant, out var coordinates);
-                coordinates ??= [];
-                coordinates.Add(currentCoordinate);
-                plants[plant] = coordinates;
-            }
-        }
-
-        var regions = new List<Region>();
-
-        foreach (var plant in plants)
-        {
-            foreach (var coordinate in plant.Value)
-            {
-                if (regions.Any(x => x.Coordinates.Any(c => c == coordinate)))
+                if (_regions.Any(x => x.Coordinates.Any(y => y == currentCoordinate)))
                 {
                     continue;
                 }
 
-                var newRegion = new Region(plant.Key);
-
-                var regionCoordinates = new List<Coordinate>();
-                regionCoordinates = FindNeighbours(plant.Value, coordinate, regionCoordinates);
-                newRegion.Coordinates.AddRange(regionCoordinates);
-
-                regions.Add(newRegion);
+                var region = new Region(plant)
+                {
+                    Coordinates = FindNeighbours(_garden, plant, currentCoordinate, [])
+                };
+                _regions.Add(region);
             }
         }
 
-        _regions = regions;
-
         return this;
+    }
+
+    private static List<Coordinate> FindNeighbours(
+        char[,] source,
+        char plant,
+        Coordinate currentCoordinate,
+        List<Coordinate> regionCoordinates)
+    {
+        if (currentCoordinate.Row < 0 || currentCoordinate.Row >= source.GetLength(0) ||
+            currentCoordinate.Col < 0 || currentCoordinate.Col >= source.GetLength(1))
+        {
+            return regionCoordinates;
+        }
+
+        if (regionCoordinates.Any(x => x == currentCoordinate))
+        {
+            return regionCoordinates;
+        }
+
+        if (source[currentCoordinate.Row, currentCoordinate.Col] != plant)
+        {
+            return regionCoordinates;
+        }
+
+        regionCoordinates.Add(currentCoordinate);
+
+        regionCoordinates = FindNeighbours(source, plant, currentCoordinate.Move(Direction.Right), regionCoordinates);
+        regionCoordinates = FindNeighbours(source, plant, currentCoordinate.Move(Direction.Down), regionCoordinates);
+        regionCoordinates = FindNeighbours(source, plant, currentCoordinate.Move(Direction.Left), regionCoordinates);
+        regionCoordinates = FindNeighbours(source, plant, currentCoordinate.Move(Direction.Up), regionCoordinates);
+
+        return regionCoordinates;
     }
 
     public Garden CalculatePerimeters()
@@ -122,7 +135,7 @@ internal class Region(
     char plantType)
 {
     public char PlantType => plantType;
-    public List<Coordinate> Coordinates { get; } = [];
+    public List<Coordinate> Coordinates { get; set; } = [];
     public int Area => Coordinates.Count;
     public int Perimeter { get; private set; } = 0;
     public int Price => Area * Perimeter;
