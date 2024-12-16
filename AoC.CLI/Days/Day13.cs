@@ -9,12 +9,10 @@ public class Day13
     public Task<string> ExecutePart1(
         IEnumerable<string> input)
     {
-        var clawMachines = input
+        var answer = input
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Chunk(3)
-            .Select(x => new ClawMachine(x));
-
-        var answer = clawMachines
+            .Select(x => new ClawMachine(x))
             .Sum(clawMachine => clawMachine.CalculateLeastTokens())
             .ToString();
 
@@ -24,7 +22,16 @@ public class Day13
     public Task<string> ExecutePart2(
         IEnumerable<string> input)
     {
-        return Task.FromResult("No implemented");
+        var offset = 10_000_000_000_000;
+
+        var answer = input
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Chunk(3)
+            .Select(x => new ClawMachine(x))
+            .Sum(clawMachine => clawMachine.CalculateLeastTokens(offset))
+            .ToString();
+
+        return Task.FromResult(answer);
     }
 }
 
@@ -72,45 +79,30 @@ internal class ClawMachine
             coordinate[1]);
     }
 
-    public int CalculateLeastTokens()
+    public long CalculateLeastTokens(
+        long offset = 0)
     {
-        for (var i = 100; i > 0; i--)
+        var prizeY = _prizeLocation.Y + offset;
+        var prizeX = _prizeLocation.X + offset;
+
+        var buttonBClicks = ((prizeY * _buttonA.XAction) - (prizeX * _buttonA.YAction))/
+                            ((_buttonA.XAction * _buttonB.YAction) - (_buttonA.YAction * _buttonB.XAction));
+        var buttonAClicks = (prizeX - _buttonB.XAction * buttonBClicks)/_buttonA.XAction;
+
+        if (offset == 0 && (buttonAClicks > 100 || buttonBClicks > 100))
         {
-            var x = i * _buttonB.XAction;
-            var y = i * _buttonB.YAction;
-
-            if (x > _prizeLocation.X ||
-                y > _prizeLocation.Y)
-            {
-                continue;
-            }
-
-            if ((_prizeLocation.X - x) % _buttonA.XAction > 0 ||
-                (_prizeLocation.Y - y) % _buttonA.YAction > 0)
-            {
-                continue;
-            }
-
-            var buttonAClicksX = (_prizeLocation.X - x) / _buttonA.XAction;
-            var buttonAClicksY = (_prizeLocation.Y - y) / _buttonA.YAction;
-
-            if (buttonAClicksX != buttonAClicksY)
-            {
-                continue;
-            }
-
-            if (buttonAClicksX > 100 ||
-                buttonAClicksY > 100)
-            {
-                return 0;
-            }
-
-            var buttonBClicks = i;
-
-            return buttonAClicksX * 3 + buttonBClicks;
+            return 0;
         }
 
-        return 0;
+        var xPrize = (buttonAClicks * _buttonA.XAction) + (buttonBClicks * _buttonB.XAction);
+        var yPrize = (buttonAClicks * _buttonA.YAction) + (buttonBClicks * _buttonB.YAction);
+
+        if (xPrize != prizeX || yPrize != prizeY)
+        {
+            return 0;
+        }
+
+        return buttonAClicks * 3 + buttonBClicks;
     }
 }
 
